@@ -15,9 +15,9 @@
       "flags": {}
     }
   ],
-  "scripts": ["scripts/main.js"],
+  "scripts": [],
+  "esmodules": ["scripts/main.js"],
   "styles": [],
-  "esmodules": [],
   "languages": [
     {
       "lang": "fr",
