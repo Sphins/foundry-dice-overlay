@@ -1,9 +1,13 @@
+import { RollFormatter } from "./roll-formatter.js";
+
+const MODULE_ID = "foundry-dice-overlay";
+
 export class OverlaySettingsForm extends FormApplication {
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
             id: "overlay-settings-form",
             title: "Foundry Dice Overlay - Paramètres",
-            template: "modules/foundry-dice-overlay/templates/overlay-settings-form.hbs",
+            template: `modules/${MODULE_ID}/templates/overlay-settings-form.hbs`,
             width: 800,
             height: "auto",
             closeOnSubmit: true
@@ -12,14 +16,15 @@ export class OverlaySettingsForm extends FormApplication {
 
     getData() {
         return {
-            html: game.settings.get("foundry-dice-overlay", "customHtml"),
-            css: game.settings.get("foundry-dice-overlay", "customCss"),
-            js: game.settings.get("foundry-dice-overlay", "customJs"),
-            enableJs: game.settings.get("foundry-dice-overlay", "enableJs"),
-            duration: game.settings.get("foundry-dice-overlay", "displayDuration"),
-            mode: game.settings.get("foundry-dice-overlay", "displayMode"),
-            filter: game.settings.get("foundry-dice-overlay", "filterGmRolls"),
-            system: game.settings.get("foundry-dice-overlay", "systemUsed")
+            html: game.settings.get(MODULE_ID, "customHtml"),
+            css: game.settings.get(MODULE_ID, "customCss"),
+            js: game.settings.get(MODULE_ID, "customJs"),
+            enableJs: game.settings.get(MODULE_ID, "enableJs"),
+            duration: game.settings.get(MODULE_ID, "displayDuration"),
+            mode: game.settings.get(MODULE_ID, "displayMode"),
+            filter: game.settings.get(MODULE_ID, "filterGmRolls"),
+            system: game.settings.get(MODULE_ID, "systemUsed"),
+            systems: RollFormatter.getSupportedSystems() // ← ce tableau est crucial
         };
     }
 
