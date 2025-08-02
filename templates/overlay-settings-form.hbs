@@ -1,0 +1,70 @@
+<section class="form-content">
+  <div class="form-group">
+    <label for="html">{{localize "MODULE.OVERLAY.HtmlLabel"}}</label>
+    <textarea name="html" rows="5">{{html}}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="css">{{localize "MODULE.OVERLAY.CssLabel"}}</label>
+    <textarea name="css" rows="5">{{css}}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label>
+      <input type="checkbox" name="enableJs" {{#if enableJs}}checked{{/if}}>
+      {{localize "MODULE.OVERLAY.JsEnable"}}
+    </label>
+  </div>
+
+  <div class="form-group" id="js-group">
+    <label for="js">{{localize "MODULE.OVERLAY.JsLabel"}}</label>
+    <textarea name="js" rows="5">{{js}}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="duration">{{localize "MODULE.OVERLAY.DurationLabel"}}</label>
+    <input type="number" name="duration" value="{{duration}}" min="1">
+  </div>
+
+  <div class="form-group">
+    <label for="mode">{{localize "MODULE.OVERLAY.ModeLabel"}}</label>
+    <select name="mode">
+      <option value="single" {{#if (eq mode "single")}}selected{{/if}}>{{localize "MODULE.OVERLAY.ModeSingle"}}</option>
+      <option value="stack" {{#if (eq mode "stack")}}selected{{/if}}>{{localize "MODULE.OVERLAY.ModeStack"}}</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="filter">{{localize "MODULE.OVERLAY.FilterLabel"}}</label>
+    <select name="filter">
+      <option value="showAll" {{#if (eq filter "showAll")}}selected{{/if}}>{{localize "MODULE.OVERLAY.FilterAll"}}</option>
+      <option value="hideGm" {{#if (eq filter "hideGm")}}selected{{/if}}>{{localize "MODULE.OVERLAY.FilterHideGm"}}</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="system">{{localize "MODULE.OVERLAY.SystemLabel"}}</label>
+    <select name="system">
+      <option value="dnd5e" {{#if (eq system "dnd5e")}}selected{{/if}}>D&D 5e</option>
+      <option value="knight" {{#if (eq system "knight")}}selected{{/if}}>Knight</option>
+      <option value="custom" {{#if (eq system "custom")}}selected{{/if}}>Autre</option>
+    </select>
+  </div>
+
+  <footer class="form-footer">
+    <button type="submit"><i class="fas fa-check"></i> {{localize "MODULE.OVERLAY.SaveButton"}}</button>
+  </footer>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const checkbox = document.querySelector('input[name="enableJs"]');
+    const jsGroup = document.getElementById("js-group");
+    if (checkbox && jsGroup) {
+      jsGroup.style.display = checkbox.checked ? "block" : "none";
+      checkbox.addEventListener("change", () => {
+        jsGroup.style.display = checkbox.checked ? "block" : "none";
+      });
+    }
+  });
+</script>

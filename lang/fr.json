@@ -1,0 +1,21 @@
+{
+  "MODULE": {
+    "OVERLAY": {
+      "MenuName": "Paramètres Overlay OBS",
+      "MenuLabel": "Configurer l’overlay",
+      "HtmlLabel": "Code HTML",
+      "CssLabel": "Code CSS",
+      "JsEnable": "Activer le JavaScript personnalisé",
+      "JsLabel": "Code JavaScript",
+      "DurationLabel": "Durée d’affichage (en secondes)",
+      "ModeLabel": "Mode d’affichage",
+      "ModeSingle": "Un seul jet à la fois",
+      "ModeStack": "Pile de jets visibles",
+      "FilterLabel": "Filtrage des jets MJ",
+      "FilterAll": "Afficher tous les jets",
+      "FilterHideGm": "Masquer les jets du MJ",
+      "SystemLabel": "Système ciblé",
+      "SaveButton": "Enregistrer"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "MODULE": {
+    "OVERLAY": {
+      "HtmlLabel": "HTML Code",
+      "CssLabel": "CSS Code",
+      "JsEnable": "Enable Custom JavaScript",
+      "JsLabel": "JavaScript Code",
+      "DurationLabel": "Display duration (in seconds)",
+      "ModeLabel": "Display Mode",
+      "ModeSingle": "Single roll at a time",
+      "ModeStack": "Stacked rolls",
+      "FilterLabel": "GM Roll Filter",
+      "FilterAll": "Show all rolls",
+      "FilterHideGm": "Hide GM rolls",
+      "SystemLabel": "Targeted System",
+      "SaveButton": "Save"
+    }
+  }
+}
