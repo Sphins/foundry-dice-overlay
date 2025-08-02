@@ -55,16 +55,3 @@
     <button type="submit"><i class="fas fa-check"></i> {{localize "MODULE.OVERLAY.SaveButton"}}</button>
   </footer>
 </section>
-
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const checkbox = document.querySelector('input[name="enableJs"]');
-    const jsGroup = document.getElementById("js-group");
-    if (checkbox && jsGroup) {
-      jsGroup.style.display = checkbox.checked ? "block" : "none";
-      checkbox.addEventListener("change", () => {
-        jsGroup.style.display = checkbox.checked ? "block" : "none";
-      });
-    }
-  });
-</script>

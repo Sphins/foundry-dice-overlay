@@ -33,4 +33,21 @@ export class OverlaySettingsForm extends FormApplication {
         await game.settings.set("foundry-dice-overlay", "filterGmRolls", formData.filter);
         await game.settings.set("foundry-dice-overlay", "systemUsed", formData.system);
     }
+
+    activateListeners(html) {
+        super.activateListeners(html);
+
+        const form = html[0]; // html est un jQuery-like, on récupère l’élément DOM natif
+        const checkbox = form.querySelector('input[name="enableJs"]');
+        const jsGroup = form.querySelector('#js-group');
+
+        if (!checkbox || !jsGroup) return;
+
+        const toggle = () => {
+            jsGroup.style.display = checkbox.checked ? "block" : "none";
+        };
+
+        checkbox.addEventListener("change", toggle);
+        toggle(); // initialise à l'ouverture
+    }
 }
