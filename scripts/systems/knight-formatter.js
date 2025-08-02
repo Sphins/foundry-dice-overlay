@@ -85,4 +85,19 @@ export class KnightRollFormatter {
 
         return data;
     }
+    static getOverlayKeys() {
+        return [
+            { id: "actor", i18n: "MODULE.OVERLAY.Data.actor" },
+            { id: "flavor", i18n: "MODULE.OVERLAY.Data.flavor" },
+            { id: "type", i18n: "MODULE.OVERLAY.Data.type" },
+            { id: "caracs", i18n: "MODULE.OVERLAY.Data.caracs" },
+            { id: "formula", i18n: "MODULE.OVERLAY.Data.formula" },
+            { id: "total", i18n: "MODULE.OVERLAY.Data.total" },
+            { id: "dice", i18n: "MODULE.OVERLAY.Data.dice" },
+            { id: "isCrit", i18n: "MODULE.OVERLAY.Data.isCrit" },
+            { id: "isExploit", i18n: "MODULE.OVERLAY.Data.isExploit" },
+            { id: "weapon", i18n: "MODULE.OVERLAY.Data.weapon" },
+            { id: "effects", i18n: "MODULE.OVERLAY.Data.effects" }
+        ];
+    }
 }

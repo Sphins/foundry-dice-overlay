@@ -53,6 +53,14 @@
   </select>
 </div>
 
+<div class="form-group">
+  <label>{{localize "MODULE.OVERLAY.AvailableKeysLabel"}}</label>
+  <ul class="available-keys">
+    {{#each availableKeys}}
+      <li><code>{{this.id}}</code> — {{localize this.i18n}}</li>
+    {{/each}}
+  </ul>
+</div>
 
 
   <footer class="form-footer">

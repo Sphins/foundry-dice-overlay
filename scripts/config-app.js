@@ -15,6 +15,10 @@ export class OverlaySettingsForm extends FormApplication {
     }
 
     getData() {
+        const systemId = game.settings.get(MODULE_ID, "systemUsed");
+        const formatter = RollFormatter.getFormatterForSystem(systemId);
+        const availableKeys = formatter?.getOverlayKeys?.() ?? [];
+
         return {
             html: game.settings.get(MODULE_ID, "customHtml"),
             css: game.settings.get(MODULE_ID, "customCss"),
@@ -23,10 +27,12 @@ export class OverlaySettingsForm extends FormApplication {
             duration: game.settings.get(MODULE_ID, "displayDuration"),
             mode: game.settings.get(MODULE_ID, "displayMode"),
             filter: game.settings.get(MODULE_ID, "filterGmRolls"),
-            system: game.settings.get(MODULE_ID, "systemUsed"),
-            systems: RollFormatter.getSupportedSystems() // ← ce tableau est crucial
+            system: systemId,
+            systems: RollFormatter.getSupportedSystems(),
+            availableKeys // ← Ajout de la liste des données exposées
         };
     }
+
 
     async _updateObject(_event, formData) {
         await game.settings.set("foundry-dice-overlay", "customHtml", formData.html);

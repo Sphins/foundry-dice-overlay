@@ -96,5 +96,20 @@ export class Dnd5eRollFormatter {
 
         return null;
     }
+
+    static getOverlayKeys() {
+        return [
+            { id: "actor", i18n: "MODULE.OVERLAY.Data.actor" },
+            { id: "formula", i18n: "MODULE.OVERLAY.Data.formula" },
+            { id: "total", i18n: "MODULE.OVERLAY.Data.total" },
+            { id: "flavor", i18n: "MODULE.OVERLAY.Data.flavor" },
+            { id: "type", i18n: "MODULE.OVERLAY.Data.type" },
+            { id: "ability", i18n: "MODULE.OVERLAY.Data.ability" },
+            { id: "skill", i18n: "MODULE.OVERLAY.Data.skill" },
+            { id: "isAttack", i18n: "MODULE.OVERLAY.Data.isAttack" },
+            { id: "isDamage", i18n: "MODULE.OVERLAY.Data.isDamage" }
+        ];
+    }
+
 }
 
