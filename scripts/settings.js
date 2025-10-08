@@ -89,3 +89,14 @@ export function registerModuleSettings() {
 
     console.log(`⚙️ [${MODULE_ID}] Paramètres enregistrés`);
 }
+
+
+    // Token lecture pour sécuriser l'accès overlay (facultatif)
+    game.settings.register(MODULE_ID, "readToken", {
+        name: "Token de lecture (overlay)",
+        hint: "Si renseigné, l’URL overlay doit contenir ?token=<valeur>. Laissez vide pour désactiver la vérification.",
+        scope: "world",
+        config: false,
+        type: String,
+        default: ""
+    });

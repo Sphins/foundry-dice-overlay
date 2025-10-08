@@ -13,7 +13,26 @@
       "FilterAll": "Show all rolls",
       "FilterHideGm": "Hide GM rolls",
       "SystemLabel": "Targeted System",
-      "SaveButton": "Save"
+      "SaveButton": "Save",
+
+      "HelpTitle": "Available variables for custom HTML",
+      "Data": {
+        "actor": "Actor name",
+        "formula": "Roll formula (e.g. 2d6+1)",
+        "total": "Total result",
+        "flavor": "Roll flavor text",
+        "type": "Roll type (ability, skill, attack…)",
+        "ability": "Ability (STR, DEX…)",
+        "skill": "Skill (Investigation…)",
+        "isAttack": "Is an attack? (true/false)",
+        "isDamage": "Is a damage roll? (true/false)",
+        "caracs": "Tested characteristics",
+        "dice": "Raw dice results",
+        "isCrit": "Critical failure?",
+        "isExploit": "Exploit?",
+        "weapon": "Weapon name (if any)",
+        "effects": "Special effects from weapon"
+      }
     }
   }
 }

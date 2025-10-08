@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overlay</title>
+  <link rel="stylesheet" href="overlay.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 1rem;
+      font-family: sans-serif;
+      background-color: transparent;
+      color: white;
+    }
+
+    #dice-overlay {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .roll-entry {
+      background-color: rgba(0, 0, 0, 0.7);
+      border-left: 4px solid #4caf50;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      animation: fadein 0.3s ease;
+    }
+
+    .total {
+      font-size: 1.5rem;
+      color: #4caf50;
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="dice-overlay"></div>
+
+  <script type="text/javascript">
+    const overlay = document.getElementById("dice-overlay");
+
+    if (typeof EventSource === "undefined") {
+      console.error("❌ EventSource n’est pas supporté par ce navigateur.");
+    } else {
+      const source = new EventSource(`/modules/foundry-dice-overlay/stream${location.search || ""}`);
+
+      source.onopen = () => console.log("✅ Connexion SSE établie.");
+      source.onerror = (err) => console.error("❌ Erreur SSE :", err);
+
+      source.onmessage = (event) => {
+        console.log("🎲 Message reçu :", event.data);
+        try {
+          const data = JSON.parse(event.data);
+          displayRoll(data);
+        } catch (e) {
+          console.error("❌ Erreur JSON :", e);
+        }
+      };
+    }
+
+    function displayRoll(data) {
+      const div = document.createElement("div");
+      div.className = "roll-entry";
+      div.innerHTML = `
+        <strong>${data.actor}</strong><br/>
+        <em>${data.formula}</em><br/>
+        Résultat : <span class="total">${data.total}</span><br/>
+        <small>${data.flavor ?? ""}</small>
+      `;
+
+      overlay.appendChild(div);
+      setTimeout(() => div.remove(), 8000);
+    }
+
+    // 🧪 Fallback de test si aucun message reçu en 5s
+    setTimeout(() => {
+      if (overlay.children.length === 0) {
+        console.warn("⚠️ Aucun message reçu, envoi d’un jet de test local.");
+        displayRoll({
+          actor: "Testeur",
+          formula: "1d20 + 4",
+          total: 17,
+          flavor: "Test de connexion"
+        });
+      }
+    }, 5000);
+  </script>
+</body>
+</html>
