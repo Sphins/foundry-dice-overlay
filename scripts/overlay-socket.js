@@ -1,40 +1,37 @@
 // scripts/overlay-socket.js
+const MODULE_ID = "foundry-dice-overlay";
 
+/**
+ * Diffusion côté client via BroadcastChannel, fallback localStorage.
+ * Pas d'Express, pas de serveur custom : fonctionne sur Molten & OBS.
+ */
 export class OverlaySocket {
-    static clients = new Set();
+    static channelName = MODULE_ID;   // tu pourras en faire un setting si tu veux
+    static bc = null;
 
-    static init(app) {
-        app.get("/modules/foundry-dice-overlay/stream", (req, res) => {
-            const url = new URL(req.protocol + "://" + req.get("host") + req.originalUrl);
-        const token = url.searchParams.get("token");
-        const expected = game.settings.get("foundry-dice-overlay", "readToken") || "";
-        if (expected && token !== expected) {
-            res.status(401).end("Unauthorized");
-            return;
+    static init() {
+        // Essaie d'ouvrir un BroadcastChannel
+        try {
+            this.bc = new BroadcastChannel(this.channelName);
+            console.log(`[${MODULE_ID}] BroadcastChannel prêt : ${this.channelName}`);
+        } catch (e) {
+            this.bc = null;
+            console.warn(`[${MODULE_ID}] BroadcastChannel indisponible, fallback localStorage.`);
         }
-
-        res.writeHead(200, {
-                "Content-Type": "text/event-stream",
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-                "Access-Control-Allow-Origin": "*"
-            });
-
-            res.write("\n"); // init
-            OverlaySocket.clients.add(res);
-
-            req.on("close", () => {
-                OverlaySocket.clients.delete(res);
-            });
-        });
-
-        console.log("✅ [foundry-dice-overlay] SSE overlay server ready.");
     }
 
     static send(data) {
         const json = JSON.stringify(data);
-        for (const client of OverlaySocket.clients) {
-            client.write(`data: ${json}\n\n`);
+
+        // 1) BroadcastChannel si dispo
+        if (this.bc) {
+            try { this.bc.postMessage(json); } catch (_) { }
         }
+
+        // 2) Fallback via storage event (déclenché dans les AUTRES fenêtres)
+        try {
+            // ajoute un timestamp pour garantir le déclenchement
+            localStorage.setItem(`${MODULE_ID}:last`, `${Date.now()}|${json}`);
+        } catch (_) { }
     }
 }

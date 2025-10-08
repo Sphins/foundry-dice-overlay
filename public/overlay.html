@@ -48,54 +48,76 @@
 <body>
   <div id="dice-overlay"></div>
 
-  <script type="text/javascript">
-    const overlay = document.getElementById("dice-overlay");
+<script>
+  // Conteneur
+  const overlay = document.getElementById("dice-overlay");
 
-    if (typeof EventSource === "undefined") {
-      console.error("❌ EventSource n’est pas supporté par ce navigateur.");
-    } else {
-      const source = new EventSource(`/modules/foundry-dice-overlay/stream${location.search || ""}`);
+  // Nom du canal (paramétrable via ?channel=xxx)
+  const params = new URLSearchParams(location.search);
+  const CHANNEL = params.get("channel") || "foundry-dice-overlay";
 
-      source.onopen = () => console.log("✅ Connexion SSE établie.");
-      source.onerror = (err) => console.error("❌ Erreur SSE :", err);
+  // Déduplication (on garde les derniers messageId vus)
+  const seenIds = new Set();
 
-      source.onmessage = (event) => {
-        console.log("🎲 Message reçu :", event.data);
-        try {
-          const data = JSON.parse(event.data);
-          displayRoll(data);
-        } catch (e) {
-          console.error("❌ Erreur JSON :", e);
-        }
-      };
+  // Rendu d'un jet
+  function displayRoll(data) {
+    if (!data) return;
+
+    // Anti-doublon par messageId (si fourni)
+    const mid = data.messageId ?? null;
+    if (mid) {
+      if (seenIds.has(mid)) return;          // déjà affiché
+      seenIds.add(mid);
+      setTimeout(() => seenIds.delete(mid), 15000); // purge au bout de 15s
     }
 
-    function displayRoll(data) {
-      const div = document.createElement("div");
-      div.className = "roll-entry";
-      div.innerHTML = `
-        <strong>${data.actor}</strong><br/>
-        <em>${data.formula}</em><br/>
-        Résultat : <span class="total">${data.total}</span><br/>
-        <small>${data.flavor ?? ""}</small>
-      `;
+    const div = document.createElement("div");
+    div.className = "roll-entry";
+    div.innerHTML = `
+      <strong>${data.actor ?? ""}</strong><br/>
+      <em>${data.formula ?? ""}</em><br/>
+      Résultat : <span class="total">${data.total ?? ""}</span><br/>
+      <small>${data.flavor ?? ""}</small>
+    `;
+    overlay.appendChild(div);
+    setTimeout(() => div.remove(), 8000);
+  }
 
-      overlay.appendChild(div);
-      setTimeout(() => div.remove(), 8000);
-    }
-
-    // 🧪 Fallback de test si aucun message reçu en 5s
-    setTimeout(() => {
-      if (overlay.children.length === 0) {
-        console.warn("⚠️ Aucun message reçu, envoi d’un jet de test local.");
-        displayRoll({
-          actor: "Testeur",
-          formula: "1d20 + 4",
-          total: 17,
-          flavor: "Test de connexion"
-        });
+  // 1) Écoute via BroadcastChannel si disponible
+  let hasBC = false;
+  try {
+    const bc = new BroadcastChannel(CHANNEL);
+    hasBC = true;
+    bc.onmessage = (ev) => {
+      try {
+        const raw = typeof ev.data === "string" ? ev.data : (ev.data?.data ?? ev.data);
+        const data = typeof raw === "string" ? JSON.parse(raw) : raw;
+        displayRoll(data);
+      } catch (e) {
+        console.error("[overlay] Erreur parsing BC :", e);
       }
-    }, 5000);
-  </script>
+    };
+    console.log("[overlay] Écoute BroadcastChannel =", CHANNEL);
+  } catch (e) {
+    console.warn("[overlay] BroadcastChannel indisponible, fallback localStorage.");
+  }
+
+  // 2) Fallback 'storage' UNIQUEMENT si pas de BroadcastChannel
+  if (!hasBC) {
+    window.addEventListener("storage", (e) => {
+      if (e.key !== "foundry-dice-overlay:last" || !e.newValue) return;
+      const pipe = e.newValue.indexOf("|");
+      const json = pipe >= 0 ? e.newValue.slice(pipe + 1) : e.newValue;
+      try {
+        const data = JSON.parse(json);
+        displayRoll(data);
+      } catch (err) {
+        console.error("[overlay] Erreur parsing storage :", err);
+      }
+    });
+  }
+</script>
+
+
 </body>
 </html>

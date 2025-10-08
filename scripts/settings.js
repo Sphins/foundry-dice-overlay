@@ -87,10 +87,6 @@ export function registerModuleSettings() {
         default: game.system.id
     });
 
-    console.log(`⚙️ [${MODULE_ID}] Paramètres enregistrés`);
-}
-
-
     // Token lecture pour sécuriser l'accès overlay (facultatif)
     game.settings.register(MODULE_ID, "readToken", {
         name: "Token de lecture (overlay)",
@@ -100,3 +96,9 @@ export function registerModuleSettings() {
         type: String,
         default: ""
     });
+
+    console.log(`⚙️ [${MODULE_ID}] Paramètres enregistrés`);
+}
+
+
+
