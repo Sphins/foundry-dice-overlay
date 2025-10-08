@@ -1,69 +1,111 @@
-<section class="form-content">
-  <div class="form-group">
-    <label for="html">{{localize "MODULE.OVERLAY.HtmlLabel"}}</label>
-    <textarea name="html" rows="5">{{html}}</textarea>
-  </div>
+{{!-- templates/overlay-settings-form.hbs --}}
+<style>
+  .fdo.overlay-settings .grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 16px;
+    align-items: start;
+  }
+  .fdo.overlay-settings h3 {
+    margin: 0 0 6px;
+    font-size: 1.05rem;
+    border-bottom: 1px solid var(--color-border-light-2);
+    padding-bottom: 4px;
+  }
+  .fdo.overlay-settings .field { margin-bottom: 12px; }
+  .fdo.overlay-settings label { display:block; font-weight:600; margin-bottom:4px; }
+  .fdo.overlay-settings textarea { width:100%; min-height: 120px; }
+  .fdo.overlay-settings input[type="number"] { width: 120px; }
+  .fdo.overlay-settings .is-hidden { display: none !important; }
 
-  <div class="form-group">
-    <label for="css">{{localize "MODULE.OVERLAY.CssLabel"}}</label>
-    <textarea name="css" rows="5">{{css}}</textarea>
-  </div>
+  .fdo.overlay-settings .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .fdo.overlay-settings .chips li {
+    list-style:none; padding:4px 8px; border-radius:6px;
+    background: var(--color-border-light-2);
+  }
+  .fdo.overlay-settings .chips code { font-weight:700; margin-right:6px; }
+  .fdo.overlay-settings .muted { opacity: 0.8; font-size: 0.9em; }
+</style>
 
-  <div class="form-group">
-    <label>
-      <input type="checkbox" name="enableJs" {{#if enableJs}}checked{{/if}}>
-      {{localize "MODULE.OVERLAY.JsEnable"}}
-    </label>
-  </div>
+<div class="grid">
+  <section>
+    <div class="field">
+      <label>{{localize "MODULE.OVERLAY.Fields.customHtml"}}</label>
+      <textarea name="customHtml" rows="10" placeholder="<div>…</div>">{{values.customHtml}}</textarea>
+      <p class="muted">{{localize "MODULE.OVERLAY.Hints.customHtml"}}</p>
+    </div>
 
-  <div class="form-group" id="js-group">
-    <label for="js">{{localize "MODULE.OVERLAY.JsLabel"}}</label>
-    <textarea name="js" rows="5">{{js}}</textarea>
-  </div>
+    <div class="field">
+      <label>{{localize "MODULE.OVERLAY.Fields.customCss"}}</label>
+      <textarea name="customCss" rows="8" placeholder="#dice-overlay { … }">{{values.customCss}}</textarea>
+      <p class="muted">{{localize "MODULE.OVERLAY.Hints.customCss"}}</p>
+    </div>
 
-  <div class="form-group">
-    <label for="duration">{{localize "MODULE.OVERLAY.DurationLabel"}}</label>
-    <input type="number" name="duration" value="{{duration}}" min="1">
-  </div>
+    <div class="field">
+      <label><input type="checkbox" name="enableJs" {{checked values.enableJs}} />
+        {{localize "MODULE.OVERLAY.Fields.enableJs"}}</label>
+      <div data-js-block class="{{#unless flags.showJs}}is-hidden{{/unless}}">
+        <label>{{localize "MODULE.OVERLAY.Fields.customJs"}}</label>
+        <textarea name="customJs" rows="8" placeholder="/* JS optionnel */">{{values.customJs}}</textarea>
+        <p class="muted">{{localize "MODULE.OVERLAY.Hints.customJs"}}</p>
+      </div>
+    </div>
+  </section>
 
-  <div class="form-group">
-    <label for="mode">{{localize "MODULE.OVERLAY.ModeLabel"}}</label>
-    <select name="mode">
-      <option value="single" {{#if (eq mode "single")}}selected{{/if}}>{{localize "MODULE.OVERLAY.ModeSingle"}}</option>
-      <option value="stack" {{#if (eq mode "stack")}}selected{{/if}}>{{localize "MODULE.OVERLAY.ModeStack"}}</option>
-    </select>
-  </div>
+  <aside>
+    <h3 class="form-header">{{localize "MODULE.OVERLAY.Section.display"}}</h3>
 
-  <div class="form-group">
-    <label for="filter">{{localize "MODULE.OVERLAY.FilterLabel"}}</label>
-    <select name="filter">
-      <option value="showAll" {{#if (eq filter "showAll")}}selected{{/if}}>{{localize "MODULE.OVERLAY.FilterAll"}}</option>
-      <option value="hideGm" {{#if (eq filter "hideGm")}}selected{{/if}}>{{localize "MODULE.OVERLAY.FilterHideGm"}}</option>
-    </select>
-  </div>
+    <div class="field">
+      <label>{{localize "MODULE.OVERLAY.Fields.displayDuration"}}</label>
+      <input type="number" name="displayDuration" value="{{values.displayDuration}}" min="1" step="1"/>
+    </div>
 
-<div class="form-group">
-  <label for="system">{{localize "MODULE.OVERLAY.SystemLabel"}}</label>
-  <select name="system">
-    {{#each systems}}
-      <option value="{{this.id}}" {{#if (eq ../system this.id)}}selected{{/if}}>
-        {{this.label}}
-      </option>
-    {{/each}}
-  </select>
+    <div class="field">
+      <label>{{localize "MODULE.OVERLAY.Fields.displayMode"}}</label>
+      <select name="displayMode">
+        {{#select values.displayMode}}
+          {{#each choices.displayMode as |label key|}}
+            <option value="{{key}}">{{label}}</option>
+          {{/each}}
+        {{/select}}
+      </select>
+    </div>
+
+    <div class="field">
+      <label>{{localize "MODULE.OVERLAY.Fields.filterGmRolls"}}</label>
+      <select name="filterGmRolls">
+        {{#select values.filterGmRolls}}
+          {{#each choices.filterGmRolls as |label key|}}
+            <option value="{{key}}">{{label}}</option>
+          {{/each}}
+        {{/select}}
+      </select>
+    </div>
+
+    <div class="field">
+      <label>{{localize "MODULE.OVERLAY.Fields.systemUsed"}}</label>
+      <select name="systemUsed">
+        {{#select values.systemUsed}}
+          {{#each choices.system as |label key|}}
+            <option value="{{key}}">{{label}}</option>
+          {{/each}}
+        {{/select}}
+      </select>
+    </div>
+
+    <h3 class="form-header">{{localize "MODULE.OVERLAY.AvailableKeysLabel"}}</h3>
+    <div class="field">
+      <ul class="chips">
+        {{#each docs}}
+          <li><code>{{this.id}}</code> {{this.label}}</li>
+        {{/each}}
+      </ul>
+    </div>
+  </aside>
 </div>
 
-<div class="form-group">
-  <label>{{localize "MODULE.OVERLAY.AvailableKeysLabel"}}</label>
-  <ul class="available-keys">
-    {{#each availableKeys}}
-      <li><code>{{this.id}}</code> — {{localize this.i18n}}</li>
-    {{/each}}
-  </ul>
-</div>
-
-
-  <footer class="form-footer">
-    <button type="submit"><i class="fas fa-check"></i> {{localize "MODULE.OVERLAY.SaveButton"}}</button>
-  </footer>
-</section>
+<footer class="sheet-footer flexrow">
+  <button type="submit" class="dialog-button default">
+    <i class="fas fa-check"></i> {{localize "Save"}}
+  </button>
+</footer>

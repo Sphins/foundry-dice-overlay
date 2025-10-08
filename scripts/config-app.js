@@ -86,14 +86,18 @@ export class OverlaySettingsForm extends FormApplication {
     activateListeners(html) {
         super.activateListeners(html);
         const $html = $(html);
-
-        // Toggle bloc JS
-        const $toggle = $html.find('[name="enableJs"]');
+        const $toggle = $html.find('input[name="enableJs"]');
         const $jsBlock = $html.find('[data-js-block]');
-        const refresh = () => $jsBlock.toggleClass("is-hidden", !$toggle.is(":checked"));
-        $toggle.on("change", refresh);
-        refresh();
+
+        const refresh = () => {
+            const on = $toggle.prop('checked');         // true si coché
+            $jsBlock.toggleClass('is-hidden', !on);     // ajoute la classe si décoché
+        };
+
+        $toggle.on('change', refresh);
+        refresh();                                    // état initial au rendu
     }
+
 
     async _updateObject(event, formData) {
         const data = foundry.utils.expandObject(formData);
