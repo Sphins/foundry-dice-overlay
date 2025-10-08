@@ -1,0 +1,40 @@
+{
+  "MODULE": {
+    "OVERLAY": {
+      "MenuName": "Paramètres Overlay OBS",
+      "MenuLabel": "Configurer l’overlay",
+      "HtmlLabel": "Code HTML",
+      "CssLabel": "Code CSS",
+      "JsEnable": "Activer le JavaScript personnalisé",
+      "JsLabel": "Code JavaScript",
+      "DurationLabel": "Durée d’affichage (en secondes)",
+      "ModeLabel": "Mode d’affichage",
+      "ModeSingle": "Un seul jet à la fois",
+      "ModeStack": "Pile de jets visibles",
+      "FilterLabel": "Filtrage des jets MJ",
+      "FilterAll": "Afficher tous les jets",
+      "FilterHideGm": "Masquer les jets du MJ",
+      "SystemLabel": "Système ciblé",
+      "SaveButton": "Enregistrer",
+
+      "HelpTitle": "Variables disponibles pour le HTML personnalisé",
+      "Data": {
+        "actor": "Nom de l’acteur",
+        "formula": "Formule du jet (ex: 2d6+1)",
+        "total": "Total du jet",
+        "flavor": "Texte descriptif du jet",
+        "type": "Type de jet (ability, skill, attack…)",
+        "ability": "Caractéristique (STR, DEX…)",
+        "skill": "Compétence (Investigation…)",
+        "isAttack": "Est une attaque ? (true/false)",
+        "isDamage": "Est un dégât ? (true/false)",
+        "caracs": "Caractéristiques testées",
+        "dice": "Détails des dés lancés",
+        "isCrit": "Échec critique ?",
+        "isExploit": "Exploit ?",
+        "weapon": "Nom de l’arme (si applicable)",
+        "effects": "Effets spéciaux liés à l’arme"
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "id": "foundry-dice-overlay",
+  "title": "Foundry Dice Overlay",
+  "description": "<p>Affiche les jets de dés dans OBS via un overlay personnalisable.</p>",
+  "version": "0.2.9",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "authors": [
+    {
+      "name": "Sphins",
+      "email": "glehenerzdev@gmail.com",
+      "url": "https://github.com/Sphins",
+      "flags": {}
+    }
+  ],
+  "scripts": [],
+  "esmodules": ["scripts/main.js"],
+  "styles": [],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "fr",
+      "name": "Français",
+      "path": "lang/fr.json"
+    }
+  ],
+  "url": "https://github.com/Sphins/foundry-dice-overlay",
+  "manifest": "https://sphins.github.io/foundry-dice-overlay/module.json",
+  "download": "https://github.com/Sphins/foundry-dice-overlay/releases/latest/download/module.zip",
+  "flags": {
+    "canUpload": true
+  }
+}

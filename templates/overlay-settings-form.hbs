@@ -1,0 +1,69 @@
+<section class="form-content">
+  <div class="form-group">
+    <label for="html">{{localize "MODULE.OVERLAY.HtmlLabel"}}</label>
+    <textarea name="html" rows="5">{{html}}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="css">{{localize "MODULE.OVERLAY.CssLabel"}}</label>
+    <textarea name="css" rows="5">{{css}}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label>
+      <input type="checkbox" name="enableJs" {{#if enableJs}}checked{{/if}}>
+      {{localize "MODULE.OVERLAY.JsEnable"}}
+    </label>
+  </div>
+
+  <div class="form-group" id="js-group">
+    <label for="js">{{localize "MODULE.OVERLAY.JsLabel"}}</label>
+    <textarea name="js" rows="5">{{js}}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="duration">{{localize "MODULE.OVERLAY.DurationLabel"}}</label>
+    <input type="number" name="duration" value="{{duration}}" min="1">
+  </div>
+
+  <div class="form-group">
+    <label for="mode">{{localize "MODULE.OVERLAY.ModeLabel"}}</label>
+    <select name="mode">
+      <option value="single" {{#if (eq mode "single")}}selected{{/if}}>{{localize "MODULE.OVERLAY.ModeSingle"}}</option>
+      <option value="stack" {{#if (eq mode "stack")}}selected{{/if}}>{{localize "MODULE.OVERLAY.ModeStack"}}</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="filter">{{localize "MODULE.OVERLAY.FilterLabel"}}</label>
+    <select name="filter">
+      <option value="showAll" {{#if (eq filter "showAll")}}selected{{/if}}>{{localize "MODULE.OVERLAY.FilterAll"}}</option>
+      <option value="hideGm" {{#if (eq filter "hideGm")}}selected{{/if}}>{{localize "MODULE.OVERLAY.FilterHideGm"}}</option>
+    </select>
+  </div>
+
+<div class="form-group">
+  <label for="system">{{localize "MODULE.OVERLAY.SystemLabel"}}</label>
+  <select name="system">
+    {{#each systems}}
+      <option value="{{this.id}}" {{#if (eq ../system this.id)}}selected{{/if}}>
+        {{this.label}}
+      </option>
+    {{/each}}
+  </select>
+</div>
+
+<div class="form-group">
+  <label>{{localize "MODULE.OVERLAY.AvailableKeysLabel"}}</label>
+  <ul class="available-keys">
+    {{#each availableKeys}}
+      <li><code>{{this.id}}</code> — {{localize this.i18n}}</li>
+    {{/each}}
+  </ul>
+</div>
+
+
+  <footer class="form-footer">
+    <button type="submit"><i class="fas fa-check"></i> {{localize "MODULE.OVERLAY.SaveButton"}}</button>
+  </footer>
+</section>

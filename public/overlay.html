@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overlay</title>
+  <link rel="stylesheet" href="overlay.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 1rem;
+      font-family: sans-serif;
+      background-color: transparent;
+      color: white;
+    }
+
+    #dice-overlay {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .roll-entry {
+      background-color: rgba(0, 0, 0, 0.7);
+      border-left: 4px solid #4caf50;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      animation: fadein 0.3s ease;
+    }
+
+    .total {
+      font-size: 1.5rem;
+      color: #4caf50;
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="dice-overlay"></div>
+
+<script>
+  // Conteneur
+  const overlay = document.getElementById("dice-overlay");
+
+  // Nom du canal (paramétrable via ?channel=xxx)
+  const params = new URLSearchParams(location.search);
+  const CHANNEL = params.get("channel") || "foundry-dice-overlay";
+
+  // Déduplication (on garde les derniers messageId vus)
+  const seenIds = new Set();
+
+  // Rendu d'un jet
+  function displayRoll(data) {
+    if (!data) return;
+
+    // Anti-doublon par messageId (si fourni)
+    const mid = data.messageId ?? null;
+    if (mid) {
+      if (seenIds.has(mid)) return;          // déjà affiché
+      seenIds.add(mid);
+      setTimeout(() => seenIds.delete(mid), 15000); // purge au bout de 15s
+    }
+
+    const div = document.createElement("div");
+    div.className = "roll-entry";
+    div.innerHTML = `
+      <strong>${data.actor ?? ""}</strong><br/>
+      <em>${data.formula ?? ""}</em><br/>
+      Résultat : <span class="total">${data.total ?? ""}</span><br/>
+      <small>${data.flavor ?? ""}</small>
+    `;
+    overlay.appendChild(div);
+    setTimeout(() => div.remove(), 8000);
+  }
+
+  // 1) Écoute via BroadcastChannel si disponible
+  let hasBC = false;
+  try {
+    const bc = new BroadcastChannel(CHANNEL);
+    hasBC = true;
+    bc.onmessage = (ev) => {
+      try {
+        const raw = typeof ev.data === "string" ? ev.data : (ev.data?.data ?? ev.data);
+        const data = typeof raw === "string" ? JSON.parse(raw) : raw;
+        displayRoll(data);
+      } catch (e) {
+        console.error("[overlay] Erreur parsing BC :", e);
+      }
+    };
+    console.log("[overlay] Écoute BroadcastChannel =", CHANNEL);
+  } catch (e) {
+    console.warn("[overlay] BroadcastChannel indisponible, fallback localStorage.");
+  }
+
+  // 2) Fallback 'storage' UNIQUEMENT si pas de BroadcastChannel
+  if (!hasBC) {
+    window.addEventListener("storage", (e) => {
+      if (e.key !== "foundry-dice-overlay:last" || !e.newValue) return;
+      const pipe = e.newValue.indexOf("|");
+      const json = pipe >= 0 ? e.newValue.slice(pipe + 1) : e.newValue;
+      try {
+        const data = JSON.parse(json);
+        displayRoll(data);
+      } catch (err) {
+        console.error("[overlay] Erreur parsing storage :", err);
+      }
+    });
+  }
+</script>
+
+
+</body>
+</html>
