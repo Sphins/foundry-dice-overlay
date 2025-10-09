@@ -49,41 +49,107 @@
   <div id="dice-overlay"></div>
 
 <script>
-  // Conteneur
+  const MODULE_ID = "foundry-dice-overlay";
   const overlay = document.getElementById("dice-overlay");
-
-  // Nom du canal (paramétrable via ?channel=xxx)
   const params = new URLSearchParams(location.search);
-  const CHANNEL = params.get("channel") || "foundry-dice-overlay";
 
-  // Déduplication (on garde les derniers messageId vus)
+  // Lecture des paramètres (namespacing)
+  const WORLD   = params.get("world") || "unknown-world";
+  const CHANNEL = params.get("channel") || `${MODULE_ID}:${WORLD}`;
+  const KEY_CONF = `${MODULE_ID}:${WORLD}:conf`;
+  const KEY_LAST = `${MODULE_ID}:${WORLD}:last`;
+
+  // Déduplication
   const seenIds = new Set();
 
-  // Rendu d'un jet
+  // État config courant, exposé à window pour JS custom
+  let currentConfig = {
+    html: "", css: "", js: "", enableJs: false,
+    displayDuration: 8, displayMode: "single",
+    systemUsed: "generic", filterGmRolls: "showAll",
+    channel: CHANNEL, world: WORLD
+  };
+  window.FDO_CONFIG = currentConfig;
+
+  // Applique CSS/JS de la config
+  function applyConfig(cfg = {}) {
+    currentConfig = Object.assign({}, currentConfig, cfg);
+    window.FDO_CONFIG = currentConfig;
+
+    // CSS
+    let styleEl = document.getElementById("fdo-custom-css");
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      styleEl.id = "fdo-custom-css";
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = currentConfig.css || "";
+
+    // JS (réinjection à chaque update)
+    const old = document.getElementById("fdo-custom-js");
+    if (old) old.remove();
+    if (currentConfig.enableJs && (currentConfig.js || "").trim()) {
+      const s = document.createElement("script");
+      s.id = "fdo-custom-js";
+      s.textContent = currentConfig.js;
+      document.body.appendChild(s);
+    }
+
+    console.log("[overlay] Config appliquée", currentConfig);
+  }
+
+  // Charge la config persistée (namespacée monde)
+  function loadConfigFromStorage() {
+    try {
+      const raw = localStorage.getItem(KEY_CONF);
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      const cfg = obj?.config || obj;
+      applyConfig(cfg);
+    } catch {}
+  }
+
+  // Moteur de template minimal {{key}} et {{config.xxx}}
+  function renderTemplate(html, data) {
+    if (!html || !html.trim()) return "";
+    return html.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, path) => {
+      try { return String(path.split(".").reduce((o, k) => (o != null ? o[k] : ""), data) ?? ""); }
+      catch { return ""; }
+    });
+  }
+
+  // Affichage d’un jet
   function displayRoll(data) {
     if (!data) return;
 
-    // Anti-doublon par messageId (si fourni)
     const mid = data.messageId ?? null;
     if (mid) {
-      if (seenIds.has(mid)) return;          // déjà affiché
+      if (seenIds.has(mid)) return;
       seenIds.add(mid);
-      setTimeout(() => seenIds.delete(mid), 15000); // purge au bout de 15s
+      setTimeout(() => seenIds.delete(mid), 15000);
     }
 
-    const div = document.createElement("div");
-    div.className = "roll-entry";
-    div.innerHTML = `
-      <strong>${data.actor ?? ""}</strong><br/>
-      <em>${data.formula ?? ""}</em><br/>
-      Résultat : <span class="total">${data.total ?? ""}</span><br/>
-      <small>${data.flavor ?? ""}</small>
-    `;
-    overlay.appendChild(div);
-    setTimeout(() => div.remove(), 8000);
+    if (currentConfig.displayMode === "single") overlay.innerHTML = "";
+
+    const node = document.createElement("div");
+    node.className = "roll-entry";
+
+    if ((currentConfig.html || "").trim()) {
+      node.innerHTML = renderTemplate(currentConfig.html, { ...data, config: currentConfig });
+    } else {
+      node.innerHTML = `
+        <strong>${data.actor ?? ""}</strong><br/>
+        <em>${data.formula ?? ""}</em> → <span class="total">${data.total ?? ""}</span><br/>
+        <small>${data.flavor ?? ""}</small>
+      `;
+    }
+
+    overlay.appendChild(node);
+    const dur = (Number(currentConfig.displayDuration) || 8) * 1000;
+    setTimeout(() => node.remove(), dur);
   }
 
-  // 1) Écoute via BroadcastChannel si disponible
+  // 1) BroadcastChannel
   let hasBC = false;
   try {
     const bc = new BroadcastChannel(CHANNEL);
@@ -91,33 +157,75 @@
     bc.onmessage = (ev) => {
       try {
         const raw = typeof ev.data === "string" ? ev.data : (ev.data?.data ?? ev.data);
-        const data = typeof raw === "string" ? JSON.parse(raw) : raw;
-        displayRoll(data);
+        const obj = JSON.parse(raw);
+
+        if (obj && obj.__fdoType === "config") {
+          applyConfig(obj.config || {});
+          try { localStorage.setItem(KEY_CONF, JSON.stringify(obj)); } catch {}
+          return;
+        }
+
+        // sinon : jet
+        displayRoll(obj);
       } catch (e) {
         console.error("[overlay] Erreur parsing BC :", e);
       }
     };
-    console.log("[overlay] Écoute BroadcastChannel =", CHANNEL);
+    console.log("[overlay] Écoute BroadcastChannel =", CHANNEL, "world=", WORLD);
   } catch (e) {
     console.warn("[overlay] BroadcastChannel indisponible, fallback localStorage.");
   }
 
-  // 2) Fallback 'storage' UNIQUEMENT si pas de BroadcastChannel
+  // 2) Fallback 'storage' si pas de BC
   if (!hasBC) {
     window.addEventListener("storage", (e) => {
-      if (e.key !== "foundry-dice-overlay:last" || !e.newValue) return;
-      const pipe = e.newValue.indexOf("|");
-      const json = pipe >= 0 ? e.newValue.slice(pipe + 1) : e.newValue;
-      try {
-        const data = JSON.parse(json);
-        displayRoll(data);
-      } catch (err) {
-        console.error("[overlay] Erreur parsing storage :", err);
+      if (!e.key || !e.newValue) return;
+
+      if (e.key === KEY_CONF) {
+        try {
+          const obj = JSON.parse(e.newValue);
+          applyConfig(obj?.config || obj || {});
+        } catch {}
+        return;
+      }
+
+      if (e.key === KEY_LAST) {
+        const pipe = e.newValue.indexOf("|");
+        const json = pipe >= 0 ? e.newValue.slice(pipe + 1) : e.newValue;
+        try { displayRoll(JSON.parse(json)); } catch {}
       }
     });
   }
-</script>
 
+  // Démarrage : charger la config persistée
+  loadConfigFromStorage();
+
+  // --- Réception via Cloudflare Worker (si ?hub=... présent dans l'URL) ---
+const hub = params.get("hub");
+const channelParam = params.get("channel") || "foundry-dice-overlay:default";
+
+if (hub) {
+  const url = `${hub}?channel=${encodeURIComponent(channelParam)}`;
+  let ws;
+  try {
+    ws = new WebSocket(url);
+    ws.onopen = () => console.log("[overlay] WS connecté :", url);
+    ws.onmessage = (ev) => {
+      try {
+        const data = JSON.parse(ev.data);
+        displayRoll(data);
+      } catch (e) {
+        console.error("[overlay] WS parse error:", e);
+      }
+    };
+    ws.onerror = (e) => console.error("[overlay] WS error:", e);
+    ws.onclose = () => console.warn("[overlay] WS fermé.");
+  } catch (e) {
+    console.error("[overlay] Impossible d’ouvrir le WS :", e);
+  }
+}
+
+</script>
 
 </body>
 </html>

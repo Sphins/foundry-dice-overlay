@@ -8,23 +8,20 @@ export class RollListener {
         Hooks.on("createChatMessage", async (message) => {
             if (!message.isRoll) return;
 
-            // Filtre MJ selon le réglage
             const filter = game.settings.get("foundry-dice-overlay", "filterGmRolls");
-            if (filter === "hideGm" && message.user?.isGM) return;
+            if (filter === "hideGm" && message.author?.isGM) return;  // ← author
 
-            // ⛔️ Anti-doublon : seul le client AUTEUR diffuse
-            // (côté MJ et autres clients : on ignore)
+            // Anti-doublon : seul l'auteur diffuse
             if (game.user?.id !== message.author?.id) return;
 
             const data = RollFormatter.extractData(message);
             if (!data) return;
 
-            // Identifiant pour dédup éventuelle côté overlay (sécurité)
-            data.messageId = message.id ?? message._id ?? null;
-
+            data.messageId = message.id ?? message._id ?? null;       // id pour dédup overlay
             OverlaySocket.send(data);
             console.log("📤 Données envoyées à l’overlay :", data);
         });
+
 
     }
 }

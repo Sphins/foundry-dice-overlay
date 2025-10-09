@@ -97,6 +97,16 @@ export function registerModuleSettings() {
         default: ""
     });
 
+    game.settings.register("foundry-dice-overlay", "hubUrl", {
+        name: "URL WebSocket du hub",
+        hint: "Ex: wss://fdo-hub.glehenerz.workers.dev/ws",
+        scope: "world",
+        config: false,
+        type: String,
+        default: ""
+    });
+
+
     console.log(`⚙️ [${MODULE_ID}] Paramètres enregistrés`);
 }
 

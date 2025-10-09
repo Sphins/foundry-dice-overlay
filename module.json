@@ -2,7 +2,7 @@
   "id": "foundry-dice-overlay",
   "title": "Foundry Dice Overlay",
   "description": "<p>Affiche les jets de dés dans OBS via un overlay personnalisable.</p>",
-  "version": "0.3.5",
+  "version": "0.4.11",
   "compatibility": {
     "minimum": "13",
     "verified": "13"
