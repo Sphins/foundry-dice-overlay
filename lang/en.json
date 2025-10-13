@@ -1,37 +1,84 @@
 {
   "MODULE": {
     "OVERLAY": {
-      "HtmlLabel": "HTML Code",
-      "CssLabel": "CSS Code",
-      "JsEnable": "Enable Custom JavaScript",
-      "JsLabel": "JavaScript Code",
-      "DurationLabel": "Display duration (in seconds)",
-      "ModeLabel": "Display Mode",
-      "ModeSingle": "Single roll at a time",
-      "ModeStack": "Stacked rolls",
-      "FilterLabel": "GM Roll Filter",
-      "FilterAll": "Show all rolls",
-      "FilterHideGm": "Hide GM rolls",
-      "SystemLabel": "Targeted System",
-      "SaveButton": "Save",
+      "ObsSection": "OBS",
+      "ObsUrl": "Overlay URL",
+      "Copy": "Copy",
+      "Open": "Open",
+      "Copied": "URL copied to the clipboard.",
+      "ObsHint": "Add this URL as a Browser Source in OBS.",
+      "Title": "Foundry Dice Overlay - Settings",
+      "MenuName": "Dice Overlay",
+      "MenuLabel": "Configure overlay",
 
-      "HelpTitle": "Available variables for custom HTML",
-      "Data": {
+      "Section": {
+        "display": "Display",
+        "OBS": "OBS",
+        "Display": "Display",
+        "AvailableKeys": "Available keys"
+      },
+
+      "AvailableKeysLabel": "Available keys",
+
+      "Fields": {
+        "customHtml": "HTML code",
+        "customCss": "CSS code",
+        "enableJs": "Enable custom JavaScript",
+        "customJs": "JavaScript code",
+        "displayDuration": "Display duration (seconds)",
+        "displayMode": "Display mode",
+        "filterGmRolls": "GM roll filter",
+        "systemUsed": "Target system",
+
+        "HtmlLabel": "HTML code",
+        "HtmlHelp": "HTML template used for each roll (values come from the keys below).",
+        "CssLabel": "CSS code",
+        "CssHelp": "Styles applied to the overlay.",
+        "OverlayUrl": "Overlay URL",
+        "OverlayUrlHelp": "Add this URL as a Browser Source in OBS. It includes the current world and channel.",
+        "HubUrl": "WebSocket hub URL (Cloudflare Workers)",
+        "HubUrlHelp": "If set, Foundry will send rolls to this hub and the overlay will connect to it (e.g. wss://fdo-hub.example.workers.dev/ws).",
+        "Duration": "Display duration (seconds)",
+        "DisplayMode": "Display mode",
+        "FilterGmRolls": "GM roll filter",
+        "System": "Target system",
+        "EnableJs": "Enable custom JavaScript",
+        "CustomJs": "JavaScript code",
+        "CustomJsHelp": "Code executed in the overlay (e.g., animations)."
+      },
+
+      "Hints": {
+        "customHtml": "Template for each roll (placeholders from the keys below).",
+        "customCss": "Styles applied to the overlay.",
+        "customJs": "Script executed in the overlay (e.g., animations)."
+      },
+
+      "Actions": {
+        "Copy": "Copy",
+        "Open": "Open",
+        "Save": "Save"
+      },
+
+      "DisplayMode": {
+        "single": "One at a time",
+        "stack": "Stack"
+      },
+
+      "Filter": {
+        "showAll": "Show all rolls",
+        "hideGm": "Hide GM rolls"
+      },
+
+      "Doc": {
         "actor": "Actor name",
-        "formula": "Roll formula (e.g. 2d6+1)",
-        "total": "Total result",
-        "flavor": "Roll flavor text",
-        "type": "Roll type (ability, skill, attack…)",
-        "ability": "Ability (STR, DEX…)",
-        "skill": "Skill (Investigation…)",
-        "isAttack": "Is an attack? (true/false)",
-        "isDamage": "Is a damage roll? (true/false)",
-        "caracs": "Tested characteristics",
-        "dice": "Raw dice results",
-        "isCrit": "Critical failure?",
-        "isExploit": "Exploit?",
-        "weapon": "Weapon name (if any)",
-        "effects": "Special effects from weapon"
+        "formula": "Dice formula (e.g., 2d6+1)",
+        "total": "Total",
+        "flavor": "Descriptive text",
+        "type": "Type of roll (ability, skill, attack...)",
+        "ability": "Ability (STR, DEX...)",
+        "skill": "Skill",
+        "isAttack": "Is it an attack? (true/false)",
+        "isDamage": "Is it damage? (true/false)"
       }
     }
   }

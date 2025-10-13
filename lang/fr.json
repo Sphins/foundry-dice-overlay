@@ -1,13 +1,26 @@
 {
   "MODULE": {
     "OVERLAY": {
+      "ObsSection": "OBS",
+      "ObsUrl": "URL de l’overlay",
+      "Copy": "Copier",
+      "Open": "Ouvrir",
+      "Copied": "URL copiée dans le presse-papiers.",
+      "ObsHint": "Ajoute cette URL comme Source Navigateur dans OBS.",
       "Title": "Foundry Dice Overlay - Paramètres",
       "MenuName": "Overlay de dés",
       "MenuLabel": "Configurer l’overlay",
+
       "Section": {
-        "display": "Affichage"
+        "display": "Affichage",
+
+        "OBS": "OBS",
+        "Display": "Affichage",
+        "AvailableKeys": "Clés disponibles"
       },
+
       "AvailableKeysLabel": "Clés disponibles",
+
       "Fields": {
         "customHtml": "Code HTML",
         "customCss": "Code CSS",
@@ -16,28 +29,54 @@
         "displayDuration": "Durée d’affichage (en secondes)",
         "displayMode": "Mode d’affichage",
         "filterGmRolls": "Filtrage des jets MJ",
-        "systemUsed": "Système ciblé"
+        "systemUsed": "Système ciblé",
+
+        "HtmlLabel": "Code HTML",
+        "HtmlHelp": "Modèle HTML utilisé pour chaque jet (les valeurs proviennent des clés ci-dessous).",
+        "CssLabel": "Code CSS",
+        "CssHelp": "Styles appliqués à l’overlay.",
+        "OverlayUrl": "URL de l’overlay",
+        "OverlayUrlHelp": "Ajoutez cette URL comme Source Navigateur dans OBS. Elle inclut le monde et le canal courants.",
+        "HubUrl": "URL WebSocket du hub (Cloudflare Workers)",
+        "HubUrlHelp": "Si renseigné, Foundry enverra les jets vers ce hub et l’overlay s’y connectera (ex. wss://fdo-hub.example.workers.dev/ws).",
+        "Duration": "Durée d’affichage (en secondes)",
+        "DisplayMode": "Mode d’affichage",
+        "FilterGmRolls": "Filtrage des jets MJ",
+        "System": "Système ciblé",
+        "EnableJs": "Activer le JavaScript personnalisé",
+        "CustomJs": "Code JavaScript",
+        "CustomJsHelp": "Code exécuté dans l’overlay (ex. animations)."
       },
+
       "Hints": {
         "customHtml": "Modèle HTML pour chaque jet (placeholders selon les clés ci-dessous).",
         "customCss": "Styles appliqués à l’overlay.",
         "customJs": "Script exécuté dans l’overlay (ex. animations)."
       },
+
+      "Actions": {
+        "Copy": "Copier",
+        "Open": "Ouvrir",
+         "Save": "Sauvegarder"
+      },
+
       "DisplayMode": {
         "single": "Un seul jet à la fois",
         "stack": "Pile visible"
       },
+
       "Filter": {
         "showAll": "Afficher tous les jets",
         "hideGm": "Masquer les jets du MJ"
       },
+
       "Doc": {
         "actor": "Nom de l’acteur",
         "formula": "Formule du jet (ex: 2d6+1)",
         "total": "Total du jet",
         "flavor": "Texte descriptif du jet",
-        "type": "Type de jet (ability, skill, attack…)",
-        "ability": "Caractéristique (STR, DEX…)",
+        "type": "Type de jet (caractéristique, compétence, attaque…)",
+        "ability": "Caractéristique (FOR, DEX…)",
         "skill": "Compétence",
         "isAttack": "Est-ce une attaque ? (true/false)",
         "isDamage": "Est-ce un dégât ? (true/false)"
