@@ -1,163 +1,229 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overlay</title>
-  <link rel="stylesheet" href="overlay.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Foundry Dice Overlay</title>
   <style>
-    body {
-      margin: 0;
-      padding: 1rem;
-      font-family: sans-serif;
-      background-color: transparent;
-      color: white;
+    :root {
+      --bg-card: rgba(0,0,0,.70);
+      --border: rgba(255,255,255,.12);
+      --accent: #4caf50;
     }
-
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;   /* OBS friendly */
+      color: #fff;
+      font: 14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+    }
     #dice-overlay {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 10px;
+      padding: 8px;
+      box-sizing: border-box;
     }
-
     .roll-entry {
-      background-color: rgba(0, 0, 0, 0.7);
-      border-left: 4px solid #4caf50;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      animation: fadein 0.3s ease;
+      background: var(--bg-card);
+      border-left: 4px solid var(--accent);
+      border-radius: 6px;
+      padding: 8px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.25);
+      animation: fdo-in .25s ease;
     }
-
-    .total {
-      font-size: 1.5rem;
-      color: #4caf50;
+    .roll-entry .total {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1.35rem;
     }
-
-    @keyframes fadein {
-      from {
-        opacity: 0;
-        transform: translateX(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
+    .roll-entry small {
+      opacity: .9;
+    }
+    @keyframes fdo-in {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0);     }
     }
   </style>
 </head>
 <body>
-  <div id="dice-overlay"></div>
+  <div id="dice-overlay" aria-live="polite"></div>
 
-<script>
-  const MODULE_ID = "foundry-dice-overlay";
-  const overlay = document.getElementById("dice-overlay");
-  const params = new URLSearchParams(location.search);
+  <script>
+    const MODULE_ID = "foundry-dice-overlay";
 
-  // Lecture des paramètres (namespacing)
-  const WORLD   = params.get("world") || "unknown-world";
-  const CHANNEL = params.get("channel") || `${MODULE_ID}:${WORLD}`;
-  const KEY_CONF = `${MODULE_ID}:${WORLD}:conf`;
-  const KEY_LAST = `${MODULE_ID}:${WORLD}:last`;
+    // ---- URL params ---------------------------------------------------------
+    const params  = new URLSearchParams(location.search);
+    const WORLD   = params.get("world") || "unknown-world";
+    const CHANNEL = params.get("channel") || `${MODULE_ID}:${WORLD}`;
+    const URL_MODE     = (params.get("mode") || "").toLowerCase(); // "single" | "stack"
+    const URL_DURATION = Number(params.get("duration") || 0);      // en secondes
+    const HUB_PARAM    = params.get("hub");                        // ws(s)://.../ws?channel=...
 
-  // Déduplication
-  const seenIds = new Set();
+    // --- clés localStorage namespacées par monde (compat Foundry côté client)
+    const KEY_CONF = `${MODULE_ID}:${WORLD}:conf`;
+    const KEY_LAST = `${MODULE_ID}:${WORLD}:last`;
 
-  // État config courant, exposé à window pour JS custom
-  let currentConfig = {
-    html: "", css: "", js: "", enableJs: false,
-    displayDuration: 8, displayMode: "single",
-    systemUsed: "generic", filterGmRolls: "showAll",
-    channel: CHANNEL, world: WORLD
-  };
-  window.FDO_CONFIG = currentConfig;
+    // --- Conteneur
+    const overlay = document.getElementById("dice-overlay");
 
-  // Applique CSS/JS de la config
-  function applyConfig(cfg = {}) {
-    currentConfig = Object.assign({}, currentConfig, cfg);
+    // --- Déduplication de messages (ex: rechargements / doublons réseau)
+    const seenIds = new Set();
+
+    // --- Config courante exposée (pour JS custom)
+    let currentConfig = {
+      html: "", css: "", js: "", enableJs: false,
+      displayDuration: URL_DURATION > 0 ? URL_DURATION : 8,
+      displayMode: URL_MODE === "stack" ? "stack" : "single",
+      systemUsed: "generic",
+      filterGmRolls: "showAll",
+      channel: CHANNEL,
+      world: WORLD
+    };
     window.FDO_CONFIG = currentConfig;
 
-    // CSS
-    let styleEl = document.getElementById("fdo-custom-css");
-    if (!styleEl) {
-      styleEl = document.createElement("style");
-      styleEl.id = "fdo-custom-css";
-      document.head.appendChild(styleEl);
-    }
-    styleEl.textContent = currentConfig.css || "";
+    // --- File d'attente pour le mode "single"
+    const queue = [];
+    let busy = false;
 
-    // JS (réinjection à chaque update)
-    const old = document.getElementById("fdo-custom-js");
-    if (old) old.remove();
-    if (currentConfig.enableJs && (currentConfig.js || "").trim()) {
-      const s = document.createElement("script");
-      s.id = "fdo-custom-js";
-      s.textContent = currentConfig.js;
-      document.body.appendChild(s);
+    // util minuscule pour éviter une injection si on affiche du texte brut
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
-    console.log("[overlay] Config appliquée", currentConfig);
-  }
+    // Applique CSS/JS de la config
+    function applyConfig(cfg = {}) {
+      currentConfig = Object.assign({}, currentConfig, cfg);
 
-  // Charge la config persistée (namespacée monde)
-  function loadConfigFromStorage() {
-    try {
-      const raw = localStorage.getItem(KEY_CONF);
-      if (!raw) return;
-      const obj = JSON.parse(raw);
-      const cfg = obj?.config || obj;
-      applyConfig(cfg);
-    } catch {}
-  }
+      // Si l’URL impose un mode/duration, elles continuent de primer
+      if (URL_MODE)     currentConfig.displayMode    = (URL_MODE === "stack" ? "stack" : "single");
+      if (URL_DURATION) currentConfig.displayDuration = URL_DURATION;
 
-  // Moteur de template minimal {{key}} et {{config.xxx}}
-  function renderTemplate(html, data) {
-    if (!html || !html.trim()) return "";
-    return html.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, path) => {
-      try { return String(path.split(".").reduce((o, k) => (o != null ? o[k] : ""), data) ?? ""); }
-      catch { return ""; }
-    });
-  }
+      window.FDO_CONFIG = currentConfig;
 
-  // Affichage d’un jet
-  function displayRoll(data) {
-    if (!data) return;
+      // CSS
+      let styleEl = document.getElementById("fdo-custom-css");
+      if (!styleEl) {
+        styleEl = document.createElement("style");
+        styleEl.id = "fdo-custom-css";
+        document.head.appendChild(styleEl);
+      }
+      styleEl.textContent = currentConfig.css || "";
 
-    const mid = data.messageId ?? null;
-    if (mid) {
-      if (seenIds.has(mid)) return;
-      seenIds.add(mid);
-      setTimeout(() => seenIds.delete(mid), 15000);
+      // JS (réinjection à chaque update)
+      const old = document.getElementById("fdo-custom-js");
+      if (old) old.remove();
+      if (currentConfig.enableJs && (currentConfig.js || "").trim()) {
+        const s = document.createElement("script");
+        s.id = "fdo-custom-js";
+        s.textContent = currentConfig.js;
+        document.body.appendChild(s);
+      }
+
+      console.log("[overlay] Config appliquée", currentConfig);
     }
 
-    if (currentConfig.displayMode === "single") overlay.innerHTML = "";
-
-    const node = document.createElement("div");
-    node.className = "roll-entry";
-
-    if ((currentConfig.html || "").trim()) {
-      node.innerHTML = renderTemplate(currentConfig.html, { ...data, config: currentConfig });
-    } else {
-      node.innerHTML = `
-        <strong>${data.actor ?? ""}</strong><br/>
-        <em>${data.formula ?? ""}</em> → <span class="total">${data.total ?? ""}</span><br/>
-        <small>${data.flavor ?? ""}</small>
-      `;
-    }
-
-    overlay.appendChild(node);
-    const dur = (Number(currentConfig.displayDuration) || 8) * 1000;
-    setTimeout(() => node.remove(), dur);
-  }
-
-  // 1) BroadcastChannel
-  let hasBC = false;
-  try {
-    const bc = new BroadcastChannel(CHANNEL);
-    hasBC = true;
-    bc.onmessage = (ev) => {
+    // Charge la config persistée (namespacée monde)
+    function loadConfigFromStorage() {
       try {
-        const raw = typeof ev.data === "string" ? ev.data : (ev.data?.data ?? ev.data);
+        const raw = localStorage.getItem(KEY_CONF);
+        if (!raw) return;
         const obj = JSON.parse(raw);
+        const cfg = obj?.config || obj;
+        applyConfig(cfg);
+      } catch {}
+    }
+
+    // Moteur de template minimal {{key}} et {{config.xxx}}
+    function renderTemplate(html, data) {
+      if (!html || !html.trim()) return "";
+      return html.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, path) => {
+        try { return String(path.split(".").reduce((o, k) => (o != null ? o[k] : ""), data) ?? ""); }
+        catch { return ""; }
+      });
+    }
+
+    // Rend un jet + destruction au bout de N secondes
+    function renderAndScheduleRemove(data, onDone) {
+      const node = document.createElement("div");
+      node.className = "roll-entry";
+
+      if ((currentConfig.html || "").trim()) {
+        node.innerHTML = renderTemplate(currentConfig.html, { ...data, config: currentConfig });
+      } else {
+        node.innerHTML = `
+          <strong>${escapeHtml(data.actor ?? "")}</strong><br/>
+          <em>${escapeHtml(data.formula ?? "")}</em>
+          → <span class="total">${escapeHtml(String(data.total ?? ""))}</span><br/>
+          <small>${escapeHtml(data.flavor ?? "")}</small>
+        `;
+      }
+
+      overlay.appendChild(node);
+      const dur = (Number(currentConfig.displayDuration) || 8) * 1000;
+      const timer = setTimeout(() => {
+        node.remove();
+        if (typeof onDone === "function") onDone();
+      }, dur);
+
+      return node;
+    }
+
+    // File : on empile et on traite
+    function enqueue(data) {
+      if (currentConfig.displayMode === "stack") {
+        renderAndScheduleRemove(data); // mode pile : affichage immédiat
+        return;
+      }
+      // mode single : on file d'attente
+      queue.push(data);
+      if (!busy) next();
+    }
+
+    function next() {
+      const data = queue.shift();
+      if (!data) { busy = false; return; }
+      busy = true;
+
+      // clear l’affichage si "single"
+      overlay.innerHTML = "";
+
+      renderAndScheduleRemove(data, () => {
+        busy = false;
+        next();
+      });
+    }
+
+    // Entrée jet (avec déduplication)
+    function handleRoll(raw) {
+      const data = (typeof raw === "string") ? safeJsonParse(raw) : raw;
+      if (!data) return;
+
+      const mid = data.messageId ?? data.mid ?? null;
+      if (mid) {
+        if (seenIds.has(mid)) return;          // déjà affiché
+        seenIds.add(mid);
+        setTimeout(() => seenIds.delete(mid), 15000); // purge
+      }
+
+      enqueue(data);
+    }
+
+    function safeJsonParse(s) {
+      try { return JSON.parse(s); } catch { return null; }
+    }
+
+    // === Réception : BroadcastChannel =======================================
+    let hasBC = false;
+    try {
+      const bc = new BroadcastChannel(CHANNEL);
+      hasBC = true;
+      bc.onmessage = (ev) => {
+        const raw = typeof ev.data === "string" ? ev.data : (ev.data?.data ?? ev.data);
+        const obj = safeJsonParse(raw) ?? raw;
 
         if (obj && obj.__fdoType === "config") {
           applyConfig(obj.config || {});
@@ -165,67 +231,52 @@
           return;
         }
 
-        // sinon : jet
-        displayRoll(obj);
-      } catch (e) {
-        console.error("[overlay] Erreur parsing BC :", e);
-      }
-    };
-    console.log("[overlay] Écoute BroadcastChannel =", CHANNEL, "world=", WORLD);
-  } catch (e) {
-    console.warn("[overlay] BroadcastChannel indisponible, fallback localStorage.");
-  }
+        handleRoll(obj);
+      };
+      console.log("[overlay] Écoute BroadcastChannel =", CHANNEL, "world=", WORLD);
+    } catch (e) {
+      console.warn("[overlay] BroadcastChannel indisponible, fallback localStorage.");
+    }
 
-  // 2) Fallback 'storage' si pas de BC
-  if (!hasBC) {
-    window.addEventListener("storage", (e) => {
-      if (!e.key || !e.newValue) return;
+    // === Fallback 'storage' (autres fenêtres) ===============================
+    if (!hasBC) {
+      window.addEventListener("storage", (e) => {
+        if (!e.key || !e.newValue) return;
 
-      if (e.key === KEY_CONF) {
-        try {
-          const obj = JSON.parse(e.newValue);
+        if (e.key === KEY_CONF) {
+          const obj = safeJsonParse(e.newValue);
           applyConfig(obj?.config || obj || {});
-        } catch {}
-        return;
-      }
+          return;
+        }
 
-      if (e.key === KEY_LAST) {
-        const pipe = e.newValue.indexOf("|");
-        const json = pipe >= 0 ? e.newValue.slice(pipe + 1) : e.newValue;
-        try { displayRoll(JSON.parse(json)); } catch {}
-      }
-    });
-  }
+        if (e.key === KEY_LAST) {
+          const pipe = e.newValue.indexOf("|");
+          const json = pipe >= 0 ? e.newValue.slice(pipe + 1) : e.newValue;
+          handleRoll(json);
+        }
+      });
+    }
 
-  // Démarrage : charger la config persistée
-  loadConfigFromStorage();
+    // === Démarrage : charger config persistée ===============================
+    loadConfigFromStorage();
 
-  // --- Réception via Cloudflare Worker (si ?hub=... présent dans l'URL) ---
-const hub = params.get("hub");
-const channelParam = params.get("channel") || "foundry-dice-overlay:default";
+    // === Hub Cloudflare (optionnel) =========================================
+    // On autorise ?hub=wss://.../ws  => on y ajoute ?channel=xxx si absent
+    if (HUB_PARAM) {
+      const url = HUB_PARAM.includes("channel=")
+        ? HUB_PARAM
+        : `${HUB_PARAM}?channel=${encodeURIComponent(CHANNEL)}`;
 
-if (hub) {
-  const url = `${hub}?channel=${encodeURIComponent(channelParam)}`;
-  let ws;
-  try {
-    ws = new WebSocket(url);
-    ws.onopen = () => console.log("[overlay] WS connecté :", url);
-    ws.onmessage = (ev) => {
       try {
-        const data = JSON.parse(ev.data);
-        displayRoll(data);
+        const ws = new WebSocket(url);
+        ws.onopen = () => console.log("[overlay] WS connecté :", url);
+        ws.onmessage = (ev) => handleRoll(ev.data);
+        ws.onerror  = (e)  => console.error("[overlay] WS error:", e);
+        ws.onclose  = ()   => console.warn("[overlay] WS fermé.");
       } catch (e) {
-        console.error("[overlay] WS parse error:", e);
+        console.error("[overlay] Impossible d’ouvrir le WS :", e);
       }
-    };
-    ws.onerror = (e) => console.error("[overlay] WS error:", e);
-    ws.onclose = () => console.warn("[overlay] WS fermé.");
-  } catch (e) {
-    console.error("[overlay] Impossible d’ouvrir le WS :", e);
-  }
-}
-
-</script>
-
+    }
+  </script>
 </body>
 </html>

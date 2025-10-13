@@ -166,12 +166,18 @@ export class OverlaySettingsForm extends BaseForm {
         const world = game.world?.id || "unknown-world";
         const channel = `${MODULE_ID}:${world}`;
 
-        const params = new URLSearchParams({ channel, world });
+        const mode = game.settings.get(MODULE_ID, "displayMode") || "single";
+        const duration = Number(game.settings.get(MODULE_ID, "displayDuration")) || 8;
+        const hub = (game.settings.get(MODULE_ID, "hubUrl") || "").trim();
 
-        // Ajoute automatiquement le hub s’il est configuré
-        const hub = game.settings.get(MODULE_ID, "hubUrl") ?? "";
-        if (hub) params.set("hub", hub);
+        const usp = new URLSearchParams({
+            channel,
+            world,
+            mode,
+            duration: String(duration)
+        });
+        if (hub) usp.set("hub", hub);
 
-        return `${origin}/modules/${MODULE_ID}/public/overlay.html?${params.toString()}`;
+        return `${origin}/modules/${MODULE_ID}/public/overlay.html?${usp.toString()}`;
     }
 }
