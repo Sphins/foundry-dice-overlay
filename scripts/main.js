@@ -23,6 +23,9 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", () => {
     console.log(`🟢 [${MODULE_ID}] Module prêt.`);
+    // Initialise le canal de diffusion (BroadcastChannel / localStorage)
+    OverlaySocket.init();
+    // Active l’écoute des jets
     RollListener.init();
 
     // Canal = module + id du monde
