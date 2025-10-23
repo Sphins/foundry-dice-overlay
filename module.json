@@ -31,8 +31,8 @@
     }
   ],
   "url": "https://github.com/Sphins/foundry-dice-overlay",
-  "manifest": "https://github.com/Sphins/foundry-dice-overlay/blob/Base/module.json",
-  "download": "https://github.com/Sphins/foundry-dice-overlay/releases/latest/download/module.zip",
+  "manifest": "https://raw.githubusercontent.com/Sphins/foundry-dice-overlay/Base/module.json",
+  "download": "https://github.com/Sphins/foundry-dice-overlay/archive/refs/heads/Base.zip",
   "flags": {
     "canUpload": true
   }
